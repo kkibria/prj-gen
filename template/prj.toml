@@ -1,4 +1,6 @@
 [config]
 abc = {prompt="abc", default="default_abc"}
+dir = {default="not prompted"}
+err = {default="not"}
 def = {prompt="def", choices = ["whatever", "whenever"], default = 1}
-wantit = {prompt="wantit", default=true}
+wantit = {prompt="{{ abc }}", default=true}
