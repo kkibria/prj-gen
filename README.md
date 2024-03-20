@@ -1,0 +1,1 @@
+this is a generalized template based project starter.

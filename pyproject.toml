@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "prj-gen"
+version = "0.1.0"
+description = ""
+authors = ["Khan Kibria <khan.kibria@gmail.com>"]
+readme = "README.md"
+packages = [{include = "prj_gen", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+prompt-toolkit = "^3.0.43"
+jinja2 = "^3.1.3"
+argparse = "^1.4.0"
+toml = "^0.10.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

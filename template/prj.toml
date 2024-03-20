@@ -1,0 +1,4 @@
+[config]
+abc = {prompt="abc", default="default_abc"}
+def = {prompt="def", choices = ["whatever", "whenever"], default = 1}
+wantit = {prompt="wantit", default=true}
