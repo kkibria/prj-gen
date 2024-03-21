@@ -1,5 +1,5 @@
 import html
-from jinja2 import Environment
+from jinja2 import Environment, FileSystemLoader
 from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.styles import Style
 from prompt_toolkit import HTML
@@ -10,19 +10,30 @@ SECTION_CONFIG = 'config'
 KEY_DEFAULT = "default"
 KEY_PROMPT = "prompt"
 KEY_CHOICES = "choices"
+KEY_YN = "yesno"
 
-TRUE_FALSE = {
+TF2BOOL = {
     "t":True,
-    "true": True,
+    "true":True,
     "f":False,
     "false":False,
 }
 
-YES_NO = {
+BOOL2TF = {
+    True: "true",
+    False: "false",
+}
+
+YN2BOOL = {
     "y":True,
-    "yes": True,
+    "yes":True,
     "n":False,
     "no":False,
+}
+
+BOOL2YN = {
+    True: "yes",
+    False: "no",
 }
 
 def get_toml(td:Path):
@@ -32,7 +43,7 @@ def get_toml(td:Path):
         raise Exception(f'Error: "{fn}" does not exist')
     if not fp.is_file():
         raise Exception(f'Error: "{fn}" is not a file')
-    with open(fp, 'r') as f:
+    with open(fp, 'r', encoding='utf-8') as f:
     	return toml.load(f)
 
 def set_template_dir(path: str):
@@ -44,11 +55,10 @@ def set_template_dir(path: str):
     return td
 
 def expand(s:str, e:Environment, ctx:dict):
-    try:
-        template = e.from_string(s)
-        r = template.render(ctx)
-    except:
-        r = s
+    if not isinstance(s, str):
+        return s
+    template = e.from_string(s)
+    r = template.render(ctx)
     return r
 
 def esc(s):
@@ -68,9 +78,27 @@ def get_user_input(toml_obj: dict):
             pr = expand(value[KEY_PROMPT], env, r)
             if KEY_CHOICES in value.keys():
                 ch = value[KEY_CHOICES]
-                df = get_choices(key, ch, df, pr)
+                if isinstance(ch, list):
+                    df = get_choices_from_list(key, ch, df, pr)
+                elif isinstance(ch, dict):
+                    df = get_choices_from_dict(key, ch, df, pr)
+                elif isinstance(ch, str):
+                    df = get_choices_from_dict(key, ch.split(), df, pr)
+                else:
+                    raise Exception(f'Error: choices for "{key}" is not valid in "prj.toml"')
+
             elif isinstance(df, bool):
-                df = get_bool(df, pr, TRUE_FALSE)
+                useyn = False
+                if KEY_YN in value.keys():
+                    yn = value[KEY_YN]
+                    if not isinstance(yn, bool):
+                        raise Exception(f'Error: "yesno" value for "{key}" is not valid in "prj.toml"')
+                    if yn:
+                        useyn = True
+                if useyn:
+                    df = get_bool(df, pr, BOOL2YN, YN2BOOL)
+                else:         
+                    df = get_bool(df, pr, BOOL2TF, TF2BOOL)
             else:
                 v = prompt(HTML(f'{esc(pr)} <skyblue>({esc(df)})</skyblue>: '))
                 if len(v) > 0:
@@ -78,7 +106,23 @@ def get_user_input(toml_obj: dict):
         r[key] = df
     return r
 
-def get_choices(key, ch, df, pr):
+def get_choices_from_dict(key:str, ch:dict, df:str, pr:str):
+    print(f'{pr} choices,')
+    if df not in ch.keys():
+        raise Exception(f'Error: default for "{key}" is not valid in "prj.toml"')
+    while True:
+        for i in ch.keys():
+            print(f'    [{i}] {ch[i]}')
+        v = prompt(HTML(f'{esc(pr)} <skyblue>({esc(df)})</skyblue>: '))
+        if len(v) > 0:
+            if v in ch.keys():
+                df = v
+                break
+        else:
+            break
+    return {"key":df, "val":ch[df]}
+
+def get_choices_from_list(key, ch, df, pr):
     print(f'{pr} choices,')
     chidx = int(df)
     if chidx >= 0 and chidx < len(ch):
@@ -92,20 +136,17 @@ def get_choices(key, ch, df, pr):
         if len(v) > 0:
             chidx = int(v)-1
             if chidx >= 0 and chidx < len(ch):
-                df = ch[chidx]
                 break
         else:
-            df = ch[chidx]
             break
-    return df
+    return {"key":chidx, "val":ch[chidx]}
 
-def get_bool(df, pr, bool_dict):
-    val = f'{df}'.lower()
+def get_bool(df:bool, pr:str, bool2str:dict, str2bool:dict):
     while True:
-        v = prompt(HTML(f'{esc(pr)} <skyblue>({val})</skyblue>: '))
+        v = prompt(HTML(f'{esc(pr)} <skyblue>({bool2str[df]})</skyblue>: '))
         if len(v) > 0:
             try:
-                df = bool_dict[v.lower().strip()]
+                df = str2bool[v.lower().strip()]
                 break
             except KeyError:
                 pass

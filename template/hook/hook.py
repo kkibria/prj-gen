@@ -8,8 +8,9 @@ class MyGen(Gen):
     def post_process(cls, r):
         r["post_injected"] = "post_injected_value"
 
-g = MyGen("template")
-dst = Path("target")
-g.run(dst)
-print(g.pre)
-print(g.post)
+def main():
+    g = MyGen("template")
+    dst = Path("target")
+    g.run(dst)
+    print(g.pre)
+    print(g.post)

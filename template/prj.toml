@@ -3,4 +3,8 @@ abc = {prompt="abc", default="default_abc"}
 dir = {default="not prompted"}
 err = {default="not"}
 def = {prompt="def", choices = ["whatever", "whenever"], default = 1}
-wantit = {prompt="{{ abc }}", default=true}
+wantit = {prompt="{{ abc }}", yesno=false, default=true}
+yesno = {prompt="did you?", yesno=true, default=true}
+yesno1 = {prompt="did you?", default=true}
+lic = {prompt="license", choices={"bb"= "bb license", "cd"= "done with license"}, default= "cd"}
+txt = {default="{{ lic.val }}"}

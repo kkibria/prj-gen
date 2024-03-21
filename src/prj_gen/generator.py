@@ -1,6 +1,11 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 import copy
-from .user_input import get_toml, get_user_input, set_template_dir
+from pathlib import Path
+
+from .template import process_folder
+from .userinput import get_toml, get_user_input, set_template_dir
+
+PRJ_FOLDER = 'prj'
 
 class Gen(ABC):
     def __init__(self, path: str) -> None:
@@ -9,22 +14,31 @@ class Gen(ABC):
     def get_toml(self):
         self.toml = get_toml(self.template_dir)
 
-    def pre_process(self):
+    @classmethod
+    @abstractmethod
+    def pre_process(cls, ctx):
+        pass
+
+    def _pre_process(self):
         r = copy.copy(self.config)
-        r["pre_injected"]= "pre_injected_value"
         self.pre = r
+        self.pre_process(r)
 
-    def post_process(self):
+    @classmethod
+    @abstractmethod
+    def post_process(cls, ctx):
+        pass
+
+    def _post_process(self):
         r = copy.copy(self.pre)
-        r["post_injected"] = "post_injected_value"
         self.post = r
+        self.post_process(r)
 
-    def run(self):
+    def run(self, tgt:Path):
         self.get_toml()
         self.config = get_user_input(self.toml)
-        self.pre_process()
-        print(self.pre)  
-        self.post_process()  
-        print(self.post)  
+        self._pre_process()
+        process_folder(self.template_dir.joinpath(PRJ_FOLDER), tgt, self.pre)
+        self._post_process()  
 
     
