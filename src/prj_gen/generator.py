@@ -17,29 +17,50 @@ class Gen(ABC):
 
     @classmethod
     @abstractmethod
-    def pre_process(cls, ctx:dict, params):
+    def pre_process(cls, ctx:dict, params:dict):
         pass
 
     def _pre_process(self):
         r = copy.copy(self.config)
+        p = copy.copy(self.params)
         self.pre = r
-        self.pre_process(r, self.params)
+        self.pre_process(r, p)
 
     @classmethod
     @abstractmethod
-    def post_process(cls, ctx:dict, params):
+    def post_process(cls, ctx:dict, params:dict):
         pass
 
     def _post_process(self):
         r = copy.copy(self.pre)
+        p = copy.copy(self.params)
         self.post = r
-        self.post_process(r, self.params)
+        self.post_process(r, p)
+
+    @classmethod
+    def select_project(cls, ctx:dict, params:dict):
+        return PRJ_FOLDER
+
+    def _select_project(self):
+        r = copy.copy(self.config)
+        p = copy.copy(self.params)
+        return self.select_project(r, p)
+
+    @classmethod
+    def special_content(cls, ctx:dict, params:dict, toml:dict):
+        raise NotImplementedError("Overrride special_content for content generation")
+
+    def _special_content(self, toml:dict):
+        r = copy.copy(self.pre)
+        p = copy.copy(self.params)
+        return self.special_content(r, p, toml)
 
     def run(self, tgt:Path):
         self.get_toml()
         self.config = get_user_input(self.toml)
+        self.params["%prj%"] = self._select_project()
         self._pre_process()
-        process_folder(self.template_dir.joinpath(PRJ_FOLDER), tgt, self.pre)
+        process_folder(self, self.template_dir.joinpath(self.params["%prj%"]), tgt, self.pre)
         self._post_process()
 
     def update_params(self, params:dict):

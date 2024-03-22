@@ -9,6 +9,9 @@ class MyGen(Gen):
     def post_process(cls, r, params):
         r["post_injected"] = "post_injected_value"
 
+    # def select_project(cls, ctx:dict, params):
+    #     return 'prj1'
+
 g = MyGen("template")
 dst = Path("target")
 g.update_params({"path": "../abc"})

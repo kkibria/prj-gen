@@ -1,18 +1,38 @@
 from pathlib import Path
+import re
 from jinja2 import Environment, FileSystemLoader
+import toml
 
-def process_folder(dir:Path, tgt:Path, ctx:dict):
+def process_folder(gen_obj, dir:Path, tgt:Path, ctx:dict):
     tgt.mkdir(exist_ok=True)
     env = Environment(loader=FileSystemLoader(dir))
     for i in dir.iterdir():
-        fntemplate = env.from_string(i.name)
-        i_tgt = tgt.joinpath(fntemplate.render(ctx))
+        # if i_name is jinja comment then strip the comment tags and set a flag
+        special = None
+        m = re.match(r"^{#(.+)#}.toml$", i.name)
+        if m is not None:
+            special = i.name
+            i_name = m.group(1)
+        else:
+            fntemplate = env.from_string(i.name)
+            i_name = fntemplate.render(ctx)
+            
+        i_tgt = tgt.joinpath(i_name)
+
         if i.is_dir():
-            process_folder(i, i_tgt, ctx)
+            process_folder(gen_obj, i, i_tgt, ctx)
+
         elif i.is_file():
-            template = env.get_template(i.name)
-            rend = template.render(ctx)
+            if special is None:
+                template = env.get_template(i.name)
+                rend = template.render(ctx)
+            else:
+                toml_obj = None
+                with open(dir.joinpath(special), 'r', encoding='utf-8') as f:
+                    toml_obj = toml.load(f)
+                content = gen_obj._special_content(toml_obj)
+                template = env.from_string(content)
+                rend = template.render(ctx)
+
             with i_tgt.open("x") as fdst:
                 fdst.write(rend)
-
-
