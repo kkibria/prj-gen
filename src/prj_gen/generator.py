@@ -6,6 +6,8 @@ from .template import process_folder
 from .userinput import get_toml, get_user_input, set_template_dir
 
 PRJ_FOLDER = 'prj'
+PARAM_TARGET = '%tgt%'
+PARAM_PROJECT = '%prj%'
 
 class Gen(ABC):
     def __init__(self, path: str) -> None:
@@ -56,11 +58,12 @@ class Gen(ABC):
         return self.special_content(r, p, toml)
 
     def run(self, tgt:Path):
+        self.params[PARAM_TARGET] = tgt
         self.get_toml()
         self.config = get_user_input(self.toml)
-        self.params["%prj%"] = self._select_project()
+        self.params[PARAM_PROJECT] = self._select_project()
         self._pre_process()
-        process_folder(self, self.template_dir.joinpath(self.params["%prj%"]), tgt, self.pre)
+        process_folder(self, self.template_dir.joinpath(self.params[PARAM_PROJECT]), tgt, self.pre)
         self._post_process()
 
     def update_params(self, params:dict):
