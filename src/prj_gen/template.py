@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+from warnings import warn
 from jinja2 import Environment, FileSystemLoader
 import toml
 
@@ -45,8 +46,12 @@ def process_folder(gen_obj, dir:Path, tgt:Path, ctx:dict):
                     template = env.from_string(content)
                     rend = template.render(ctx)
 
-                with i_tgt.open("x") as fdst:
+                if i_tgt.exists():
+                    path = "/".join(i_tgt.parts)
+                    warn(f'overwriting "{path}"')
+                    
+                with i_tgt.open("w") as fdst:
                     fdst.write(rend)
         else:
             path = "/".join(dir.joinpath(i.name).parts)
-            print(f'Warning: "{path}" skipped, name yields to empty string')
+            warn(f'"{path}" skipped, name yields to empty string')
