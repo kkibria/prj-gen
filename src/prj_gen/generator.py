@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import copy
 from pathlib import Path
+import shutil
 
 from .template import process_folder
 from .userinput import get_toml, get_user_input, set_template_dir
@@ -50,15 +51,22 @@ class Gen(ABC):
 
     @classmethod
     def special_content(cls, ctx:dict, params:dict, toml:dict):
-        raise NotImplementedError("Overrride special_content for content generation")
+        raise NotImplementedError('Override "special_content" for content generation.')
 
     def _special_content(self, toml:dict):
         r = copy.copy(self.pre)
         p = copy.copy(self.params)
         return self.special_content(r, p, toml)
 
-    def run(self, tgt:Path):
-        self.params[PARAM_TARGET] = tgt
+    def run(self, tgt:Path) -> bool:
+        try:
+            self._run(tgt)
+        except Exception as err:
+            shutil.rmtree(tgt)
+            raise
+    
+    def _run(self, tgt:Path):
+        self.params[PARAM_TARGET] = tgt.absolute().as_posix()
         self.get_toml()
         self.config = get_user_input(self.toml)
         self.params[PARAM_PROJECT] = self._select_project()

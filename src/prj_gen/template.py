@@ -36,9 +36,17 @@ def process_folder(gen_obj, dir:Path, tgt:Path, ctx:dict):
                     toml_obj = None
                     with open(dir.joinpath(special), 'r', encoding='utf-8') as f:
                         toml_obj = toml.load(f)
-                    content = gen_obj._special_content(toml_obj)
+                    try:
+                        content = gen_obj._special_content(toml_obj)
+                    except NotImplementedError as e:
+                        path = "/".join(dir.joinpath(special).parts)
+                        raise NotImplementedError(f'Template "{path}" failed. {e.args[0]}') from e
+
                     template = env.from_string(content)
                     rend = template.render(ctx)
 
                 with i_tgt.open("x") as fdst:
                     fdst.write(rend)
+        else:
+            path = "/".join(dir.joinpath(i.name).parts)
+            print(f'Warning: "{path}" skipped, name yields to empty string')
