@@ -9,30 +9,36 @@ def process_folder(gen_obj, dir:Path, tgt:Path, ctx:dict):
     for i in dir.iterdir():
         # if i_name is jinja comment then strip the comment tags and set a flag
         special = None
-        m = re.match(r"^{#(.+)#}.toml$", i.name)
+        m = re.match(r"^{#(.+)#}(.*)$", i.name)
         if m is not None:
-            special = i.name
-            i_name = m.group(1)
+            fn = m.group(1).strip()
+            ext = m.group(2).strip()
+            if '.toml' == ext:
+                special = i.name
+                i_name = fn
+            else:
+                i_name = fn + ext
         else:
             fntemplate = env.from_string(i.name)
             i_name = fntemplate.render(ctx)
-            
-        i_tgt = tgt.joinpath(i_name)
 
-        if i.is_dir():
-            process_folder(gen_obj, i, i_tgt, ctx)
+        if len(i_name) > 0:
+            i_tgt = tgt.joinpath(i_name)
 
-        elif i.is_file():
-            if special is None:
-                template = env.get_template(i.name)
-                rend = template.render(ctx)
-            else:
-                toml_obj = None
-                with open(dir.joinpath(special), 'r', encoding='utf-8') as f:
-                    toml_obj = toml.load(f)
-                content = gen_obj._special_content(toml_obj)
-                template = env.from_string(content)
-                rend = template.render(ctx)
+            if i.is_dir():
+                process_folder(gen_obj, i, i_tgt, ctx)
 
-            with i_tgt.open("x") as fdst:
-                fdst.write(rend)
+            elif i.is_file():
+                if special is None:
+                    template = env.get_template(i.name)
+                    rend = template.render(ctx)
+                else:
+                    toml_obj = None
+                    with open(dir.joinpath(special), 'r', encoding='utf-8') as f:
+                        toml_obj = toml.load(f)
+                    content = gen_obj._special_content(toml_obj)
+                    template = env.from_string(content)
+                    rend = template.render(ctx)
+
+                with i_tgt.open("x") as fdst:
+                    fdst.write(rend)

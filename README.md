@@ -80,4 +80,4 @@ be written as a file named `filenamee.ext`.
 
 The default `special_content` will raise a NotImplementedError exception. You
 need to override it to add special template handling based on your specific
-need.
+requirement.
