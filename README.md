@@ -57,9 +57,9 @@ different situation. In such case multiple projects are to be used.
 Template layout
 ```
 template
-   +-- projectA
-   +-- projectB
-   +-- projectC
+   +-- projectA (folder)
+   +-- projectB (folder)
+   +-- projectC (folder)
    |   ...
    +-- prj.toml
 ```
