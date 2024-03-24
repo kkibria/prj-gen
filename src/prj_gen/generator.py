@@ -86,6 +86,7 @@ class Gen(ABC):
         self.params[PARAM_TARGET] = tgt.absolute().as_posix()
         self.get_toml()
         self.config = get_user_input(self.toml)
+        self.config['__target__'] = tgt.name
         for i in self._select_project():
             print(f'==> Performing stage: "{i}"')
             self.params[PARAM_PROJECT] = i
