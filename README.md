@@ -67,8 +67,16 @@ The project is actually selected by a class function called `select_project`.
 The default version selects the project named `prj` which is how it worked for
 the single project case.
 
+Note that the projects are not nested in the layout, they are in the same folder
+level. They just provide different group of templates organized by functional
+tasks.
+
 However, in this multiple project case, an override of `select_project` can
-select a project by examining the context and returning the project name.   
+select a project or multiple projects by examining the context and returning a
+list of project names. The template processing will be done for each project in
+the same order they appear in the list. This provides a very structured
+multi-pass generation to provide a rich set of combinations of functionality yet
+still maintaining functional separation of templates. 
 
 ## Special template file
 

@@ -41,13 +41,20 @@ class Gen(ABC):
         self.post_process(r, p)
 
     @classmethod
-    def select_project(cls, ctx:dict, params:dict):
+    def select_project(cls, ctx:dict, params:dict) -> list[str] | str: 
         return PRJ_FOLDER
 
-    def _select_project(self):
+    def _select_project(self) -> list[str] | str:
         r = copy.copy(self.config)
         p = copy.copy(self.params)
-        return self.select_project(r, p)
+        prj = self.select_project(r, p)
+        if isinstance(prj, list):
+            return prj
+        elif isinstance(prj, str):
+            return [prj]
+        else:
+            t = prj.__class__.__name__
+            raise TypeError(f'"select_project" returned invalid type "{t}".')
 
     @classmethod
     def special_content(cls, ctx:dict, params:dict, toml:dict):
@@ -58,21 +65,34 @@ class Gen(ABC):
         p = copy.copy(self.params)
         return self.special_content(r, p, toml)
 
+    @classmethod
+    def finalize(cls, ctx:dict, params:dict):
+        pass
+
+    def _finalize(self):
+        r = copy.copy(self.pre)
+        p = copy.copy(self.params)
+        return self.finalize(r, p)
+
     def run(self, tgt:Path) -> bool:
         try:
             self._run(tgt)
         except Exception as err:
-            shutil.rmtree(tgt)
+            if tgt.exists():
+                shutil.rmtree(tgt)
             raise
     
     def _run(self, tgt:Path):
         self.params[PARAM_TARGET] = tgt.absolute().as_posix()
         self.get_toml()
         self.config = get_user_input(self.toml)
-        self.params[PARAM_PROJECT] = self._select_project()
-        self._pre_process()
-        process_folder(self, self.template_dir.joinpath(self.params[PARAM_PROJECT]), tgt, self.pre)
-        self._post_process()
+        for i in self._select_project():
+            print(f'==> Performing stage: "{i}"')
+            self.params[PARAM_PROJECT] = i
+            self._pre_process()
+            process_folder(self, self.template_dir.joinpath(self.params[PARAM_PROJECT]), tgt, self.pre)
+            self._post_process()
+        self._finalize()
 
     def update_params(self, params:dict):
         self.params.update(params)
