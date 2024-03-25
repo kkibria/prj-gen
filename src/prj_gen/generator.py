@@ -14,6 +14,7 @@ class Gen(ABC):
     def __init__(self, path: str) -> None:
         self.template_dir = set_template_dir(path)
         self.params = {}
+        self.exclude = set()
 
     def get_toml(self):
         self.toml = get_toml(self.template_dir)
@@ -98,3 +99,5 @@ class Gen(ABC):
     def update_params(self, params:dict):
         self.params.update(params)
     
+    def exclude_add(self, exclude_list):
+        self.exclude |= set(exclude_list)

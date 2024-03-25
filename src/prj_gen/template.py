@@ -27,7 +27,8 @@ def process_folder(gen_obj, dir:Path, tgt:Path, ctx:dict):
             i_tgt = tgt.joinpath(i_name)
 
             if i.is_dir():
-                process_folder(gen_obj, i, i_tgt, ctx)
+                if i.name not in gen_obj.exclude:
+                    process_folder(gen_obj, i, i_tgt, ctx)
 
             elif i.is_file():
                 if special is None:
