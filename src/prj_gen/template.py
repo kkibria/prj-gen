@@ -31,6 +31,7 @@ def process_folder(gen_obj, dir:Path, tgt:Path, ctx:dict):
 
             elif i.is_file():
                 if special is None:
+                    print(f'using {i.name} in {dir.name} as template')
                     template = env.get_template(i.name)
                     rend = template.render(ctx)
                 else:
