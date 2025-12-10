@@ -36,4 +36,4 @@ def get_license(path, name):
     dst = Path(path).joinpath("LICENSE.txt")
     dst.write_text(lic["body"], encoding="utf-8")
 
-    print(f"Saved license '{lic.get('name', names[idx])}' to {dst}")
+    print(f"Saved license '{lic.get('name', names[idx])}'.\nPlease read it carefully and update anything necesary.")
